@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Школьный форум — мессенджер</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <style>
+    :root{
+      --bg:#0f1220;
+      --panel:#171b2e;
+      --panel2:#1c2140;
+      --text:#f5f7ff;
+      --muted:#a6b0d6;
+      --accent:#7c9cff;
+      --accent2:#8ff3c8;
+      --danger:#ff6b87;
+      --line:rgba(255,255,255,.08);
+      --shadow:0 16px 60px rgba(0,0,0,.35);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(1000px 700px at 15% 10%, rgba(124,156,255,.2), transparent 50%),
+                 radial-gradient(900px 600px at 90% 0%, rgba(143,243,200,.14), transparent 45%),
+                 var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1200px;margin:0 auto;padding:22px}
+    .topbar{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      padding:14px 18px;background:rgba(23,27,46,.85);backdrop-filter:blur(16px);
+      border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);position:sticky;top:14px;z-index:20
+    }
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.2px}
+    .logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#06111e;font-weight:900}
+    .nav{display:flex;gap:10px;flex-wrap:wrap}
+    .btn,.ghost,.danger{
+      border:0;border-radius:16px;padding:11px 15px;font-weight:700;cursor:pointer;transition:.18s;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px
+    }
+    .btn{background:linear-gradient(135deg,var(--accent),#99b4ff);color:#0c1220}
+    .btn:hover{transform:translateY(-1px)}
+    .ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+    .danger{background:rgba(255,107,135,.14);color:#ffd6de;border:1px solid rgba(255,107,135,.28)}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:18px;margin-top:18px}
+    .card{
+      background:rgba(23,27,46,.82);backdrop-filter:blur(16px);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      padding:18px
+    }
+    .card h2,.card h3{margin:0 0 14px}
+    .muted{color:var(--muted)}
+    .input,.textarea,select{
+      width:100%;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);
+      color:var(--text);padding:12px 14px;font:inherit;outline:none
+    }
+    .textarea{min-height:120px;resize:vertical}
+    .stack{display:grid;gap:12px}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);font-size:13px}
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px;align-items:start}
+    .posts{display:grid;gap:14px}
+    .post{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;padding:16px}
+    .post-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .userline{display:flex;align-items:center;gap:12px;min-width:0}
+    .avatar{width:46px;height:46px;border-radius:16px;object-fit:cover;background:linear-gradient(135deg,rgba(124,156,255,.25),rgba(143,243,200,.25));border:1px solid rgba(255,255,255,.08)}
+    .name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .small{font-size:13px;color:var(--muted)}
+    .post-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .canvas-wrap{display:grid;gap:12px}
+    canvas{width:100%;max-width:360px;aspect-ratio:1;border-radius:22px;border:1px solid var(--line);background:white;touch-action:none}
+    .chatbox{display:grid;grid-template-rows:auto 1fr auto;gap:12px;min-height:70vh}
+    .messages{display:grid;gap:10px;overflow:auto;max-height:62vh;padding-right:4px}
+    .bubble{max-width:75%;padding:12px 14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+    .mine{margin-left:auto;background:rgba(124,156,255,.18)}
+    .auth-card{max-width:520px;margin:40px auto 0}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;color:var(--muted);font-weight:700}
+    .tab.active{background:rgba(124,156,255,.18);color:var(--text)}
+    .notice{padding:12px 14px;border-radius:16px;background:rgba(143,243,200,.12);border:1px solid rgba(143,243,200,.22);color:#d9fff0}
+    .dangerbox{padding:12px 14px;border-radius:16px;background:rgba(255,107,135,.12);border:1px solid rgba(255,107,135,.22);color:#ffd8e0}
+    @media (max-width: 980px){.grid,.hero{grid-template-columns:1fr}.topbar{position:static}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><div class="logo">F</div><div>Мессенджер</div></div>
+      <div class="nav">
+        <a class="ghost" href="feed.html">Лента</a>
+        <a class="ghost" href="profile.html">Мой профиль</a>
+        <button class="danger" id="logoutBtn">Выйти</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Найти собеседника</h2>
+        <div class="stack">
+          <input class="input" id="searchUser" placeholder="Ник или UID" />
+          <button class="btn" id="findBtn">Открыть чат</button>
+          <div class="muted">Можно открыть чат прямо из поста через кнопку «Написать».</div>
+        </div>
+        <div class="posts" id="searchResults" style="margin-top:14px"></div>
+      </div>
+      <div class="card chatbox">
+        <div>
+          <h2 id="chatTitle">Чат</h2>
+          <div class="muted" id="chatSub">Сначала выбери пользователя.</div>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="stack">
+          <textarea class="textarea" id="msgText" placeholder="Сообщение"></textarea>
+          <button class="btn" id="sendBtn">Отправить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>const firebaseConfig = {
+  apiKey: "AIzaSyBBVZQBK-hdRdSHVKm3gWNNbnVYA6trekQ",
+  authDomain: "sosylksoset.firebaseapp.com",
+  projectId: "sosylksoset",
+  storageBucket: "sosylksoset.firebasestorage.app",
+  messagingSenderId: "322929691356",
+  appId: "1:322929691356:web:4457a6d844a60917be0219",
+  measurementId: "G-FGRR0RGW4D"
+};
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+auth.useDeviceLanguage();
+
+const provider = new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
+
+function qs(name){ return new URLSearchParams(location.search).get(name) || ''; }
+function esc(s){ return String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function timeText(v){
+  if(!v) return 'только что';
+  try{
+    const d = v.toDate ? v.toDate() : new Date(v);
+    return new Intl.DateTimeFormat('ru-RU', { dateStyle:'medium', timeStyle:'short' }).format(d);
+  }catch(e){ return 'только что'; }
+}
+async function ensureUserDoc(user, nickname){
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  const data = {
+    uid: user.uid,
+    email: user.email || '',
+    displayName: user.displayName || '',
+    photoURL: user.photoURL || '',
+    provider: user.providerData?.[0]?.providerId || 'password',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if(!snap.exists){
+    await ref.set({
+      ...data,
+      nickname: nickname || (user.displayName || user.email?.split('@')[0] || 'user'),
+      bio: '',
+      avatarDataURL: '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } else if(nickname){
+    await ref.set({ ...data, nickname }, { merge:true });
+  } else {
+    await ref.set(data, { merge:true });
+  }
+}
+async function getUserDoc(uid){
+  const snap = await db.collection('users').doc(uid).get();
+  return snap.exists ? snap.data() : null;
+}
+function requireAuth(){
+  auth.onAuthStateChanged(user => {
+    if(!user) location.href = 'index.html';
+  });
+}
+async function logout(){ await auth.signOut(); location.href = 'index.html'; }
+
+requireAuth();
+let partner = null;
+let unsubscribe = null;
+const messagesEl = document.getElementById('messages');
+const chatTitle = document.getElementById('chatTitle');
+const chatSub = document.getElementById('chatSub');
+const results = document.getElementById('searchResults');
+const urlPartner = qs('with');
+
+function chatId(a,b){ return [a,b].sort().join('_'); }
+
+async function openChatByUid(uid){
+  const me = auth.currentUser; if(!me || !uid || uid === me.uid) return;
+  const user = await getUserDoc(uid);
+  if(!user) throw new Error('Пользователь не найден');
+  partner = { uid, ...user };
+  chatTitle.textContent = `Чат с ${user.nickname || 'user'}`;
+  chatSub.textContent = user.email || uid;
+  const cid = chatId(me.uid, uid);
+  await db.collection('chats').doc(cid).set({
+    members: [me.uid, uid],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge:true });
+  if(unsubscribe) unsubscribe();
+  unsubscribe = db.collection('chats').doc(cid).collection('messages').orderBy('createdAt','asc').limit(200)
+    .onSnapshot(snap => {
+      messagesEl.innerHTML = snap.docs.map(docSnap => {
+        const m = docSnap.data();
+        const mine = m.from === me.uid;
+        return `<div class="bubble ${mine ? 'mine' : ''}"><div class="small">${mine ? 'Вы' : esc(partner.nickname || 'user')} · ${timeText(m.createdAt)}</div><div style="margin-top:6px;white-space:pre-wrap">${esc(m.text || '')}</div></div>`;
+      }).join('') || '<div class="muted">Пока пусто.</div>';
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+}
+
+document.getElementById('logoutBtn').onclick = logout;
+document.getElementById('findBtn').onclick = async () => {
+  try {
+    const val = document.getElementById('searchUser').value.trim();
+    if(!val) return;
+    const byUid = await getUserDoc(val);
+    if(byUid) return openChatByUid(val);
+    const q = await db.collection('users').where('nickname','==',val).limit(10).get();
+    if(q.empty){ results.innerHTML = '<div class="muted">Ник не найден</div>'; return; }
+    results.innerHTML = q.docs.map(d => {
+      const u = d.data();
+      return `<div class="post"><div class="name">${esc(u.nickname || 'user')}</div><div class="small">${esc(u.email || d.id)}</div><div style="margin-top:10px"><button class="ghost" data-uid="${d.id}">Открыть</button></div></div>`;
+    }).join('');
+    results.querySelectorAll('button[data-uid]').forEach(btn => btn.onclick = () => openChatByUid(btn.dataset.uid));
+  } catch (e) { alert(e.message); }
+};
+
+document.getElementById('sendBtn').onclick = async () => {
+  try {
+    const me = auth.currentUser; if(!me) throw new Error('Нет входа');
+    if(!partner) throw new Error('Сначала выбери собеседника');
+    const text = document.getElementById('msgText').value.trim();
+    if(!text) throw new Error('Сообщение пустое');
+    const cid = chatId(me.uid, partner.uid);
+    await db.collection('chats').doc(cid).collection('messages').add({
+      from: me.uid,
+      to: partner.uid,
+      text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await db.collection('chats').doc(cid).set({ updatedAt: firebase.firestore.FieldValue.serverTimestamp(), members: [me.uid, partner.uid] }, { merge:true });
+    document.getElementById('msgText').value = '';
+  } catch (e) { alert(e.message); }
+};
+
+auth.onAuthStateChanged(async user => {
+  if(user && urlPartner){
+    try { await openChatByUid(urlPartner); } catch (e) { chatSub.textContent = e.message; }
+  }
+});
+  </script>
+</body>
+</html>
