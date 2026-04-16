@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Школьный форум — лента</title>
+  <title>Лента</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -97,7 +97,7 @@ canvas{width:100%;max-width:360px;aspect-ratio:1;border-radius:22px;border:1px s
 
 <div class="wrap">
   <div class="topbar">
-    <div class="brand"><div class="logo">F</div><div>Школьный форум</div></div>
+    <div class="brand"><div class="logo">NV</div><div>n-vaves</div></div>
     <div class="nav">
       <a class="ghost" href="profile.html">Профиль</a>
       <a class="ghost" href="messenger.html">Сообщения <span class="pill" id="unreadBadge" style="display:none;padding:4px 8px;margin-left:6px"></span></a>
@@ -111,7 +111,7 @@ canvas{width:100%;max-width:360px;aspect-ratio:1;border-radius:22px;border:1px s
     <div class="card">
       <h2>Новый пост</h2>
       <div class="stack">
-        <textarea class="textarea" id="postText" placeholder="Напиши что-нибудь для школы..."></textarea>
+        <textarea class="textarea" id="postText" placeholder="Напиши что-нибудь..."></textarea>
         <button class="btn" id="postBtn" type="button">Опубликовать</button>
       </div>
 
@@ -380,9 +380,9 @@ function renderPost(p) {
       ${repostInfo}
 
       <div class="post-actions">
-        <button class="ghost" data-action="like" data-id="${p.id}">Лайк <span id="likeCount-${p.id}">${Number(p.likesCount || 0)}</span></button>
-        <button class="ghost" data-action="repost" data-id="${p.id}">Репост <span id="repostCount-${p.id}">${Number(p.repostsCount || 0)}</span></button>
-        <button class="ghost" data-action="openProfile" data-uid="${p.uid}">Профиль</button>
+        <button class="ghost" data-action="like" data-id="${p.id}">❤️ <span id="likeCount-${p.id}">${Number(p.likesCount || 0)}</span></button>
+        <button class="ghost" data-action="repost" data-id="${p.id}">↪️ <span id="repostCount-${p.id}">${Number(p.repostsCount || 0)}</span></button>
+        <button class="ghost" data-action="openProfile" data-uid="${p.uid}">👤</button>
         <button class="ghost" data-action="message" data-uid="${p.uid}">Написать</button>
       </div>
 
