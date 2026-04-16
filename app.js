@@ -96,10 +96,9 @@ function topbar(active='') {
   return `
   <div class="topbar">
     <a class="brand-link" href="feed.html">
-      <div class="brand-mark">S</div>
+      <div class="brand-mark">T</div>
       <div>
-        <div class="brand-title">Форум школы</div>
-        <div class="brand-sub">простая живая лента</div>
+        <div class="brand-title">Talksy</div>
       </div>
     </a>
     <div class="top-icons">
